@@ -1,0 +1,12 @@
+package P3;
+
+import java.util.Random;
+
+/* JADX INFO: loaded from: classes.dex */
+public abstract class a extends d {
+    public abstract Random a();
+
+    public final int b(int i) {
+        return a().nextInt(i);
+    }
+}
