@@ -1,0 +1,60 @@
+# Huda Allah System - Docker Compose
+# نظام هدى الله - ملف التكوين
+
+version: '3.8'
+
+services:
+  # Backend API (NestJS)
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: huda_backend
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/database/main_db@2.sqlite
+    volumes:
+      - ./database:/app/database
+    networks:
+      - huda_network
+
+  # Admin Dashboard (Next.js)
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    container_name: huda_admin
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:3000/api
+    depends_on:
+      - backend
+    networks:
+      - huda_network
+
+  # Mobile App (Flutter Web)
+  mobile:
+    build:
+      context: ./apps/mobile
+      dockerfile: Dockerfile
+    container_name: huda_mobile
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - huda_network
+
+networks:
+  huda_network:
+    driver: bridge
+
+volumes:
+  database:

@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../db/huda_allah.db"
+}
+
+// Quran Tables
+model Surah {
+  id              Int     @id @default(autoincrement())
+  juzId           Int?    @map("juz_id")
+  pageId          Int?    @map("page_id")
+  fallOrder       Int?    @map("fall_order")
+  moshafOrder     Int?    @map("moshaf_order")
+  ayahsCount      Int?    @map("ayahs_count")
+  fallPlace       Int?    @map("fall_place") // 0 = Makki, 1 = Madani
+  title           String  @db.VarChar(50)
+  names           String?
+  info            String?
+  symbol          String  @db.VarChar(5)
+  startAyahOrder  Int?    @map("start_ayah_order")
+  
+  ayahs           Ayah[]
+  
+  @@map("quran_surah")
+}
+
+model Ayah {
+  id              Int     @id @default(autoincrement())
+  surahId         Int?    @map("surah_id")
+  juzId           Int?    @map("juz_id")
+  hizbId          Int?    @map("hizb_id")
+  pageId          Int?    @map("page_id")
+  hizbNumber      Int?    @map("hizb_number")
+  ayahOrder       Int?    @map("ayah_order")
+  ayahNumber      Int?    @map("ayah_number")
+  isStartHizb     Boolean @default(false) @map("is_start_hizb")
+  isStartJuz      Boolean @default(false) @map("is_start_juz")
+  hasProstration  Boolean @default(false) @map("has_prostration")
+  prostrationType Int?    @map("prostration_type")
+  plainText       String? @map("plain_text")
+  quranText       String? @map("quran_text")
+  stem            String?
+  
+  surah           Surah?  @relation(fields: [surahId], references: [id])
+  
+  @@map("quran_ayah")
+}
+
+model Page {
+  id               Int     @id @default(autoincrement())
+  startSurahId     Int?    @map("start_surah_id")
+  startJuzId       Int?    @map("start_juz_id")
+  startHizbId      Int?    @map("start_hizb_id")
+  hizbNumber       Int?    @map("hizb_number")
+  pageNumber       Int?    @map("page_number")
+  startAyahNumber  Int?    @map("start_ayah_number")
+  startAyahOrder   Int?    @map("start_ayah_order")
+  
+  @@map("quran_page")
+}
+
+model Juz {
+  id               Int     @id @default(autoincrement())
+  startSurahId     Int?    @map("start_surah_id")
+  startPageId      Int?    @map("start_page_id")
+  juzNumber        Int?    @map("juz_number")
+  startAyahNumber  Int?    @map("start_ayah_number")
+  firstAyahs       String? @map("first_ayahs")
+  startAyahOrder   Int?    @map("start_ayah_order")
+  
+  @@map("quran_juz")
+}
+
+model Hizb {
+  id               Int     @id @default(autoincrement())
+  juzId            Int?    @map("juz_id")
+  surahId          Int?    @map("surah_id")
+  startPageId      Int?    @map("start_page_id")
+  hizbNumber       Int?    @map("hizb_number")
+  segmentOrder     Int?    @map("segment_order")
+  ayahNumber       Int?    @map("ayah_number")
+  firstAyahs       String? @map("first_ayahs")
+  startAyahOrder   Int?    @map("start_ayah_order")
+  approvalStatus   Int?    @map("approval_status")
+  
+  @@map("quran_hizb")
+}
+
+// Audio Tables
+model Reciter {
+  id              Int       @id @default(autoincrement())
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  name            String?
+  isComplete      Boolean   @default(false) @map("is_complete")
+  approvalStatus  Int?      @map("approval_status")
+  countryId       Int?      @map("country_id")
+  profile         String?   @db.VarChar(100)
+  
+  reciterTypes    ReciterType[]
+  reciterAudios   ReciterAudio[]
+  
+  @@map("quran_reciter")
+}
+
+model Recitation {
+  id              Int       @id @default(autoincrement())
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  name            String    @db.VarChar(50)
+  isActive        Boolean   @default(false) @map("is_active")
+  
+  @@map("quran_recitation")
+}
+
+model ReciterType {
+  id              Int       @id @default(autoincrement())
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  reciterId       Int?      @map("reciter_id")
+  recitationId    Int?      @map("recitation_id")
+  approvalStatus  Int?      @map("approval_status")
+  
+  reciter         Reciter?  @relation(fields: [reciterId], references: [id])
+  
+  @@map("quran_recitertype")
+}
+
+model ReciterAudio {
+  id              Int       @id @default(autoincrement())
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  reciterId       Int?      @map("reciter_id")
+  surahId         Int?      @map("surah_id")
+  reciterTypeId   Int?      @map("reciter_type_id")
+  audio           String    @db.VarChar(100)
+  approvalStatus  Int?      @map("approval_status")
+  isComplete      Boolean   @default(false) @map("is_complete")
+  
+  reciter         Reciter?  @relation(fields: [reciterId], references: [id])
+  
+  @@map("quran_reciteraudio")
+}
+
+// Wiki/Lectures Tables
+model Lecturer {
+  id              Int       @id @default(autoincrement())
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  name            String?
+  fullName        String?   @map("full_name")
+  profile         String?   @db.VarChar(100)
+  code            String?
+  approvalStatus  Int?      @map("approval_status")
+  isComplete      Boolean   @default(false) @map("is_complete")
+  
+  lectures        Lecture[]
+  albums          Album[]
+  
+  @@map("quran_wiki_lecturer")
+}
+
+model Lecture {
+  id              Int       @id @default(autoincrement())
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  title           String?
+  keywords        String?
+  shortContent    String?   @map("short_content")
+  date            DateTime?
+  ordr            Int?
+  cover           String?   @db.VarChar(100)
+  views           Int?
+  approvalStatus  Int?      @map("approval_status")
+  isComplete      Boolean   @default(false) @map("is_complete")
+  lecturerId      Int?      @map("lecturer_id")
+  albumId         Int?      @map("album_id")
+  
+  lecturer        Lecturer? @relation(fields: [lecturerId], references: [id])
+  paragraphs      Paragraph[]
+  media           Media[]
+  
+  @@map("quran_wiki_lecture")
+}
+
+model Paragraph {
+  id                Int       @id @default(autoincrement())
+  deletedAt         DateTime? @map("deleted_at")
+  createdAt         DateTime? @map("created_at")
+  updatedAt         DateTime? @map("updated_at")
+  lectureId         Int?      @map("lecture_id")
+  title             String?
+  ordr              Int?
+  formattedContent  String?   @map("formatted_content")
+  content           String?
+  plainContent      String?   @map("plain_content")
+  startPageNumber   Int?      @map("start_page_number")
+  approvalStatus    Int?      @map("approval_status")
+  
+  lecture           Lecture?  @relation(fields: [lectureId], references: [id])
+  
+  @@map("quran_wiki_paragraph")
+}
+
+model Media {
+  id              Int       @id @default(autoincrement())
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  name            String?
+  media           String?   @db.VarChar(100)
+  approvalStatus  Int?      @map("approval_status")
+  albumId         Int?      @map("album_id")
+  lectureId       Int?      @map("lecture_id")
+  mediaTypeId     Int?      @map("media_type_id")
+  
+  lecture         Lecture?  @relation(fields: [lectureId], references: [id])
+  
+  @@map("quran_wiki_media")
+}
+
+model Album {
+  id              Int       @id @default(autoincrement())
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  name            String?
+  ordr            Int?
+  cover           String?   @db.VarChar(100)
+  isActive        Boolean   @default(false) @map("is_active")
+  lecturerId      Int?      @map("lecturer_id")
+  lecturerTypeId  Int?      @map("lecturer_type_id")
+  albumId         Int?      @map("album_id")
+  
+  lecturer        Lecturer? @relation(fields: [lecturerId], references: [id])
+  
+  @@map("quran_wiki_album")
+}
+
+model Tag {
+  id              Int       @id @default(autoincrement())
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  name            String?
+  
+  @@map("quran_wiki_tag")
+}
